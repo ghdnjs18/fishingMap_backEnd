@@ -41,6 +41,9 @@ public class Post extends Timestamped{
     @Column(name = "locationdate")
     private String locationdate;
 
+    @Column(name = "point", nullable = false)
+    private boolean point = false;
+
     @ElementCollection
     @CollectionTable(name = "coordinates")
     private List<Double> coordinates = new ArrayList<>();

@@ -9,6 +9,7 @@ import com.sparta.fishingload_backend.repository.CategoryRepository;
 import com.sparta.fishingload_backend.repository.PostLikeRepository;
 import com.sparta.fishingload_backend.repository.PostRepository;
 import com.sparta.fishingload_backend.repository.UserRepository;
+import com.sparta.fishingload_backend.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -35,6 +36,8 @@ public class PostService {
         Post post = new Post(requestDto);
         post.setAccountId(user.getUserId());
 
+        if (user.getRole() == UserRoleEnum.ADMIN) post.setPostUse(true);
+
         Category category = findCategory(requestDto.getCategoryId());
         category.addPostList(post);
 
@@ -46,12 +49,38 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
-    public Page<PostResponseDto> getPosts(int page, int size, String sortBy, boolean isAsc) {
+    public PostListResponseDto getPosts() {
+        PostListResponseDto responseDto = new PostListResponseDto();
+        List<Long> cate = new ArrayList<>();
+        cate.add(1L);
+        cate.add(2L);
+        List<PostResponseDto> list = postRepository.findAllByCategoryIdInAndPostUseTrueAndPointTrue(cate).stream().map(PostResponseDto::new).toList();
+        for(PostResponseDto postResponseDto : list){
+            responseDto.setPost(postResponseDto);
+        }
+        return responseDto;
+    }
+
+    @Transactional(readOnly = true)
+    public PostListResponseDto getMypost(User user) {
+        PostListResponseDto responseDto = new PostListResponseDto();
+        List<Long> cate = new ArrayList<>();
+        cate.add(1L);
+        cate.add(2L);
+        List<PostResponseDto> list = postRepository.findAllByCategoryIdInAndAccountIdAndPostUseTrue(cate , user.getUserId()).stream().map(PostResponseDto::new).toList();
+        for(PostResponseDto postResponseDto : list){
+            responseDto.setPost(postResponseDto);
+        }
+        return responseDto;
+    }
+
+    @Transactional(readOnly = true)
+    public Page<PostResponseDto> getCommunity(int page, int size, String sortBy, boolean isAsc) {
         Sort.Direction direction = isAsc ? Sort.Direction.ASC : Sort.Direction.DESC;
         Sort sort = Sort.by(direction, sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        Page<PostResponseDto> pageList = postRepository.findAllByPostUseTrue(pageable).map(PostResponseDto::new);
+        Page<PostResponseDto> pageList = postRepository.findAllByCategoryIdAndPostUseTrue(3L, pageable).map(PostResponseDto::new);
         for(PostResponseDto postResponseDto : pageList){
             commentChange(postResponseDto);
         }
@@ -119,21 +148,6 @@ public class PostService {
         post.setPostLike(post.getPostLike() - 1);
         message = new MessageResponseDto("게시물 좋아요를 취소했습니다.", HttpStatus.OK.value());
         return ResponseEntity.status(HttpStatus.OK).body(message);
-    }
-
-    @Transactional(readOnly = true)
-    public PostListResponseDto getCategoryPost(Long id, User user) {
-        PostListResponseDto responseDto = new PostListResponseDto();
-        List<PostResponseDto> list;
-        if (id == 3) {
-            list = postRepository.findAllByCategoryIdAndPostUseTrue(id).stream().map(PostResponseDto::new).toList();
-        } else {
-            list = postRepository.findAllByCategoryIdNotLikeAndAccountIdAndPostUseTrue(3L, user.getUserId()).stream().map(PostResponseDto::new).toList();
-        }
-        for(PostResponseDto postResponseDto : list){
-            responseDto.setPost(postResponseDto);
-        }
-        return responseDto;
     }
 
     private Post findPost(Long id) {

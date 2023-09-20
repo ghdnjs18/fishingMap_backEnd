@@ -25,12 +25,22 @@ public class PostController {
     }
 
     @GetMapping("/post")
-    public Page<PostResponseDto> getPosts(
+    public PostListResponseDto getPosts() {
+        return postService.getPosts();
+    }
+
+    @GetMapping("/mypost")
+    public PostListResponseDto getMypost(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+        return postService.getMypost(userDetails.getUser());
+    }
+
+    @GetMapping("/community")
+    public Page<PostResponseDto> getCommunity(
             @RequestParam("page") int page,
             @RequestParam("size") int size,
             @RequestParam("sortBy") String sortBy,
             @RequestParam("isAsc") boolean isAsc) {
-        return postService.getPosts(page-1, size, sortBy, isAsc);
+        return postService.getCommunity(page-1, size, sortBy, isAsc);
     }
 
     @GetMapping("/post/{id}")
@@ -51,10 +61,5 @@ public class PostController {
     @PutMapping("/post/like/{id}")
     public ResponseEntity<MessageResponseDto> likePost(@PathVariable Long id, @AuthenticationPrincipal UserDetailsImpl userDetails) {
         return postService.likePost(id, userDetails.getUser());
-    }
-
-    @GetMapping("/post/category/{id}")
-    public PostListResponseDto getCategoryPost(@PathVariable Long id, @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        return postService.getCategoryPost(id, userDetails.getUser());
     }
 }
