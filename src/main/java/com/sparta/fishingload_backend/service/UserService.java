@@ -34,13 +34,27 @@ public class UserService {
 
     // 회원가입
     public ResponseEntity<MessageResponseDto> signup(SignupRequestDto requestDto) {
-        String userId = requestDto.getUserId();
         String password = passwordEncoder.encode(requestDto.getPassword());
 
         // 회원 중복 확인
+        String userId = requestDto.getUserId();
         Optional<User> checkUsername = userRepository.findByUserId(userId);
         if (checkUsername.isPresent()) {
             throw new IllegalArgumentException("중복된 사용자가 존재합니다.");
+        }
+
+        // 이메일 중복 확인
+        String email = requestDto.getEmail();
+        Optional<User> checkEmail = userRepository.findByEmail(email);
+        if (checkEmail.isPresent()) {
+            throw new IllegalArgumentException("중복된 이메일이 존재합니다.");
+        }
+
+        // 닉네임 중복 확인
+        String nickname = requestDto.getNickname();
+        Optional<User> checkNickname = userRepository.findByNickname(nickname);
+        if (checkNickname.isPresent()) {
+            throw new IllegalArgumentException("중복된 닉네임이 존재합니다.");
         }
 
         // 사용자 권한 확인
