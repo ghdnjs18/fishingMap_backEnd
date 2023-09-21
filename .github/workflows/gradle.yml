@@ -32,12 +32,15 @@ jobs:
     # gradlew 실행 권한 부여
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
+    # application.properties 추가
+    - name: Update application.properties
+      run: |
+        echo ${{ secrets.APPLICATION_PROPERTIES_DATA }} >> src/main/resources/application.properties
     # gradle build
     - name: Build with Gradle
-#      uses: gradle/gradle-build-action@bd5760595778326ba7f1441bcf7e88b49de61a25 # v2.6.0
-#      with:
-#        arguments: clean build
-      run: ./gradlew clean bootJar
+      uses: gradle/gradle-build-action@bd5760595778326ba7f1441bcf7e88b49de61a25 # v2.6.0
+      with:
+        arguments: clean build
     # 디렉토리 생성
     - name: Make Directory
       run: mkdir -p deploy
