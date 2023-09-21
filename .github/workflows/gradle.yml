@@ -15,7 +15,7 @@ on:
     branches: [ "main" ]
 
 env:
-  S3_BUCKET_NAME: cointalk-deploy
+  S3_BUCKET_NAME: elasticbeanstalk-ap-northeast-2-526437230846
 
 jobs:
   build:
