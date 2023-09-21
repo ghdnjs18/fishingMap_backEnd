@@ -65,5 +65,5 @@ jobs:
         --application-name fishingLoad \
         --deployment-group-name fish \
         --file-exists-behavior OVERWRITE \
-        --s3-location bucket=$S3_BUCKET_NAME,bundleType=zip,key=fishingLoad.zip \ 
+        --s3-location bucket=elasticbeanstalk-ap-northeast-2-526437230846,bundleType=zip,key=fishingLoad.zip \ 
         --region ap-northeast-2
