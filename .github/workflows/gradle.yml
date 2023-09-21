@@ -35,7 +35,7 @@ jobs:
     # application.properties 추가
     - name: Update application.properties
       run: |
-        echo $PROPERTIES > src/main/resources/application.properties
+        echo $PROPERTIES >> src/main/resources/application.properties
       env:
         PROPERTIES: ${{ secrets.APPLICATION_PROPERTIES_DATA }}
       # gradle build
