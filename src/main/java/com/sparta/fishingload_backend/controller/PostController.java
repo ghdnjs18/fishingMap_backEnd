@@ -29,12 +29,12 @@ public class PostController {
         return postService.getPosts();
     }
 
-    @GetMapping("/mypost")
+    @GetMapping("/post/mypost")
     public PostListResponseDto getMypost(@AuthenticationPrincipal UserDetailsImpl userDetails) {
         return postService.getMypost(userDetails.getUser());
     }
 
-    @GetMapping("/community")
+    @GetMapping("/post/community")
     public Page<PostResponseDto> getCommunity(
             @RequestParam("page") int page,
             @RequestParam("size") int size,
