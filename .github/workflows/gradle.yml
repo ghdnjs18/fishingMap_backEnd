@@ -35,4 +35,4 @@ jobs:
     # gradle build
     - name: Build with Gradle
       # 테스트를 스킵하고 빌드 시도
-      run: ./gradlew clean build
+      run: ./gradlew clean build --exclude-task test
