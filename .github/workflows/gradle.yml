@@ -34,9 +34,9 @@ jobs:
       run: chmod +x gradlew
     # gradle build
     - name: Build with Gradle
-      uses: gradle/gradle-build-action@v8.2.1
+      uses: gradle/gradle-build-action@bd5760595778326ba7f1441bcf7e88b49de61a25 # v2.6.0
       with:
-        arguments: build
+        arguments: bootJar
     # 디렉토리 생성
     - name: Make Directory
       run: mkdir -p deploy
