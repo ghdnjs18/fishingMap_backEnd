@@ -36,7 +36,7 @@ public class PostService {
         Post post = new Post(requestDto);
         post.setAccountId(user.getUserId());
 
-        if (user.getRole() == UserRoleEnum.ADMIN) post.setPostUse(true);
+        if (user.getRole() == UserRoleEnum.ADMIN) post.setPoint(true);
 
         Category category = findCategory(requestDto.getCategoryId());
         category.addPostList(post);
