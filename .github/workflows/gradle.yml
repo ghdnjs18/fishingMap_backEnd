@@ -64,13 +64,13 @@ jobs:
 
     # Deploy
     - name: Deploy
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#      env:
+#        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       run: |
         aws deploy create-deployment \
         --application-name fishingLoad \
-        --deployment-group-name fish \
+        --deployment-group-name fishingLoad-deployment-group \
         --file-exists-behavior OVERWRITE \
-        --s3-location bucket=elasticbeanstalk-ap-northeast-2-526437230846,bundleType=zip,key=fishingLoad.zip \ 
+        --s3-location bucket=$S3_BUCKET_NAME,bundleType=zip,key=fishingLoad.zip \ 
         --region ap-northeast-2
