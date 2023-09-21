@@ -27,21 +27,22 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
-
+    # gradlew 실행 권한 부여
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
-
+    # gradle build
     - name: Build with Gradle
 #      uses: gradle/gradle-build-action@bd5760595778326ba7f1441bcf7e88b49de61a25 # v2.6.0
 #      with:
 #        arguments: build
       run: ./gradlew clean build --exclude-task test
-
+    # build 결과물 jar파일을 artifact로 지정
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
         name: cicdsample
         path: build/libs/*.jar
+        expire_in: 1 week
 
   deploy:
     needs: build
@@ -58,7 +59,7 @@ jobs:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: SCP transfer
-        run: scp *.jar ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:~/cicd
+        run: scp *.jar ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:~/cicdsample
 
       - name: Execute remote commands
         run: |
