@@ -71,6 +71,7 @@ jobs:
         aws deploy create-deployment \
         --application-name fishingLoad \
         --deployment-group-name fishingLoad-deployment-group \
-        --file-exists-behavior OVERWRITE \
+        --deployment-config-name CodeDeployDefault.AllAtOnce \
+#        --file-exists-behavior OVERWRITE \
         --s3-location bucket=$S3_BUCKET_NAME,bundleType=zip,key=fishingLoad.zip \ 
         --region ap-northeast-2
