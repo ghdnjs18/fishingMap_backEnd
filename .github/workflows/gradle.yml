@@ -28,9 +28,15 @@ jobs:
     # application.properties 추가
     - name: Update application.properties
       run: |
-        echo $PROPERTIES > src/main/resources/application-secret.properties
+        echo $JWT_SECRET_KEY > src/main/resources/application-secret.properties
+        echo $DB_URL >> src/main/resources/application-secret.properties
+        echo $DB_USERNAME >> src/main/resources/application-secret.properties
+        echo $DB_PASSWORD >> src/main/resources/application-secret.properties
       env:
-        PROPERTIES: ${{ secrets.APPLICATION_PROPERTIES_DATA }}
+        JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+        DB_URL: ${{ secrets.DB_URL }}
+        DB_USERNAME: ${{ secrets.DB_USERNAME }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
       # gradle build
     - name: Build with Gradle
       uses: gradle/gradle-build-action@bd5760595778326ba7f1441bcf7e88b49de61a25 # v2.6.0
