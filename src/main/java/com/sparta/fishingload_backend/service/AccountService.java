@@ -25,7 +25,6 @@ public class AccountService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final PostRepository postRepository;
-    private final PostService postService;
 
     //개인 정보
     public AccountResponseDto MyInfo(User user) {
@@ -63,9 +62,7 @@ public class AccountService {
         Pageable pageable = PageRequest.of(page, size, sort);
 
         Page<PostResponseDto> pageList = postRepository.findAllByPostUseTrueAndAccountId(pageable, user.getUserId()).map(PostResponseDto::new);
-        for(PostResponseDto postResponseDto : pageList){
-            postService.commentChange(postResponseDto);
-        }
+
         return pageList;
     }
 

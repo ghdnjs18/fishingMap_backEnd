@@ -32,6 +32,9 @@ public class Comment extends Timestamped {
     @Column(name = "comment_use", nullable = false)
     private boolean commentUse = true;
 
+    @Column(name = "commentlikeues", nullable = false)
+    private boolean commentLikeUse = false;
+
     @JsonIgnore
     @OneToMany(mappedBy = "comment")
     private List<CommentLike> commentLikeList = new ArrayList<>();

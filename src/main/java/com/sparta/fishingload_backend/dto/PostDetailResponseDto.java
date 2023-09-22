@@ -3,7 +3,6 @@ package com.sparta.fishingload_backend.dto;
 import com.sparta.fishingload_backend.entity.Category;
 import com.sparta.fishingload_backend.entity.Comment;
 import com.sparta.fishingload_backend.entity.Post;
-import com.sparta.fishingload_backend.entity.PostLike;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,7 +11,7 @@ import java.util.List;
 
 @Getter
 @Setter
-public class PostResponseDto {
+public class PostDetailResponseDto {
     private Long id;
     private String title;
     private String accountId;
@@ -24,8 +23,10 @@ public class PostResponseDto {
     private String locationdate;
     private List<Double> coordinates;
     private Category category;
+    private List<Comment> commentList;
+    private boolean postLikeUse = false;
 
-    public PostResponseDto(Post post) {
+    public PostDetailResponseDto(Post post) {
         this.id = post.getId();
         this.title = post.getTitle();
         this.accountId = post.getAccountId();
@@ -36,6 +37,7 @@ public class PostResponseDto {
         this.fishtype = post.getFishtype();
         this.locationdate = post.getLocationdate();
         this.category = post.getCategory();
+        this.commentList = post.getCommentList();
         this.coordinates = post.getCoordinates();
     }
 }

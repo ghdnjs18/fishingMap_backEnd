@@ -1,15 +1,8 @@
 package com.sparta.fishingload_backend.service;
 
-import com.sparta.fishingload_backend.dto.MessageResponseDto;
-import com.sparta.fishingload_backend.dto.PostListResponseDto;
-import com.sparta.fishingload_backend.dto.PostRequestDto;
-import com.sparta.fishingload_backend.dto.PostResponseDto;
+import com.sparta.fishingload_backend.dto.*;
 import com.sparta.fishingload_backend.entity.*;
-import com.sparta.fishingload_backend.repository.CategoryRepository;
-import com.sparta.fishingload_backend.repository.PostLikeRepository;
-import com.sparta.fishingload_backend.repository.PostRepository;
-import com.sparta.fishingload_backend.repository.UserRepository;
-import com.sparta.fishingload_backend.security.JwtUtil;
+import com.sparta.fishingload_backend.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -31,6 +24,7 @@ public class PostService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final PostLikeRepository postLikeRepository;
+    private final CommentLikeRepository commentLikeRepository;
 
     public PostResponseDto createPost(PostRequestDto requestDto, User user) {
         Post post = new Post(requestDto);
@@ -81,18 +75,19 @@ public class PostService {
         Pageable pageable = PageRequest.of(page, size, sort);
 
         Page<PostResponseDto> pageList = postRepository.findAllByCategoryIdAndPostUseTrue(3L, pageable).map(PostResponseDto::new);
-        for(PostResponseDto postResponseDto : pageList){
-            commentChange(postResponseDto);
-        }
 
         return pageList;
     }
 
     @Transactional(readOnly = true)
-    public PostResponseDto getPost(Long id) {
+    public PostDetailResponseDto getPost(Long id, User user) {
         Post post = findPost(id);
-        PostResponseDto responseDto = new PostResponseDto(post);
-        commentChange(responseDto);
+        PostDetailResponseDto responseDto = new PostDetailResponseDto(post);
+        PostLike postLike = postLikeRepository.findByUser_IdAndPost_Id(user.getId(), id);
+        if (postLike != null && !postLike.isCheck()) {
+            responseDto.setPostLikeUse(true);
+        }
+        commentChange(responseDto, user.getId());
 
         return responseDto;
     }
@@ -168,20 +163,24 @@ public class PostService {
         );
     }
 
-    public void commentChange(PostResponseDto postResponseDto) {
+    public void commentChange(PostDetailResponseDto postResponseDto, Long userId) {
         for (Comment comment : postResponseDto.getCommentList()) {
-            commentSetChange(comment);
+            commentSetChange(comment, userId);
         }
     }
 
-    private void commentSetChange(Comment comment) {
+    private void commentSetChange(Comment comment, Long userId) {
+        CommentLike commentLike = commentLikeRepository.findByUser_IdAndComment_Id(userId, comment.getId());
+        if (commentLike != null && !commentLike.isCheck()) {
+            comment.setCommentLikeUse(true);
+        }
         if (!comment.isCommentUse()) {
             comment.setAccountId("알수없음");
             comment.setComment("삭제된 댓글입니다.");
         }
         if (comment.getChildcommentList() != null) {
             for (Comment comment1 : comment.getChildcommentList()) {
-                commentSetChange(comment1);
+                commentSetChange(comment1, userId);
             }
         }
     }

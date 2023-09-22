@@ -1,9 +1,6 @@
 package com.sparta.fishingload_backend.controller;
 
-import com.sparta.fishingload_backend.dto.MessageResponseDto;
-import com.sparta.fishingload_backend.dto.PostListResponseDto;
-import com.sparta.fishingload_backend.dto.PostRequestDto;
-import com.sparta.fishingload_backend.dto.PostResponseDto;
+import com.sparta.fishingload_backend.dto.*;
 import com.sparta.fishingload_backend.security.UserDetailsImpl;
 import com.sparta.fishingload_backend.service.PostService;
 import lombok.RequiredArgsConstructor;
@@ -44,8 +41,8 @@ public class PostController {
     }
 
     @GetMapping("/post/{id}")
-    public PostResponseDto getPost(@PathVariable Long id) {
-        return postService.getPost(id);
+    public PostDetailResponseDto getPost(@PathVariable Long id, @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        return postService.getPost(id, userDetails.getUser());
     }
 
     @PutMapping("/post/{id}")
