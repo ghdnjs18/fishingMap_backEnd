@@ -3,11 +3,13 @@ package com.sparta.fishingload_backend.service;
 import com.sparta.fishingload_backend.dto.*;
 import com.sparta.fishingload_backend.entity.*;
 import com.sparta.fishingload_backend.repository.*;
+import com.sparta.fishingload_backend.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,7 @@ public class PostService {
     private final CategoryRepository categoryRepository;
     private final PostLikeRepository postLikeRepository;
     private final CommentLikeRepository commentLikeRepository;
+    private final JwtUtil jwtUtil;
 
     public PostResponseDto createPost(PostRequestDto requestDto, User user) {
         Post post = new Post(requestDto);
@@ -80,15 +83,25 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
-    public PostDetailResponseDto getPost(Long id, User user) {
+    public PostDetailResponseDto getPost(Long id, HttpHeaders headers) {
         Post post = findPost(id);
         PostDetailResponseDto responseDto = new PostDetailResponseDto(post);
-        PostLike postLike = postLikeRepository.findByUser_IdAndPost_Id(user.getId(), id);
-        if (postLike != null && !postLike.isCheck()) {
-            responseDto.setPostLikeUse(true);
-        }
-        commentChange(responseDto, user.getId());
 
+        if (headers.get("Authorization") != null) {
+            String token = headers.getFirst("Authorization");
+            token = jwtUtil.substringToken(token);
+            String userId = jwtUtil.getUserInfoFromToken(token).getSubject();
+            User user = findUser(userId);
+
+            PostLike postLike = postLikeRepository.findByUser_IdAndPost_Id(user.getId(), id);
+            if (postLike != null && !postLike.isCheck()) {
+                responseDto.setPostLikeUse(true);
+            }
+            commentChange(responseDto, user.getId());
+            return responseDto;
+        }
+
+        commentChange(responseDto, 0L);
         return responseDto;
     }
 
