@@ -31,7 +31,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
         String accessToken = jwtUtil.getJwtFromHeader(req, JwtUtil.AUTHORIZATION_HEADER);
         String refreshToken = jwtUtil.getJwtFromHeader(req, JwtUtil.REFRESH_HEADER);
 
-        if (req.getRequestURI().equals("/user/login") || req.getRequestURI().equals("/user/signup")) {
+        if (req.getRequestURI().equals("/user/login") || req.getRequestURI().equals("/user/signup") || req.getRequestURI().equals("/")) {
             logger.info("Pass Authorization");
             filterChain.doFilter(req, res);
         }
