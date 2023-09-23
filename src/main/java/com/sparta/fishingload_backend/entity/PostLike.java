@@ -30,4 +30,8 @@ public class PostLike {
         this.user = user;
         this.post = post;
     }
+
+    public void changeCheck() {
+        this.check = !this.check;
+    }
 }

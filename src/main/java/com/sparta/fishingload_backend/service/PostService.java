@@ -146,13 +146,13 @@ public class PostService {
 
         MessageResponseDto message;
         if (postLike.isCheck()) {
-            postLike.setCheck(false);
+            postLike.changeCheck();
             post.setPostLike(post.getPostLike() + 1);
             message = new MessageResponseDto("게시물 좋아요를 성공했습니다.", HttpStatus.OK.value());
             return ResponseEntity.status(HttpStatus.OK).body(message);
         }
 
-        postLike.setCheck(true);
+        postLike.changeCheck();
         post.setPostLike(post.getPostLike() - 1);
         message = new MessageResponseDto("게시물 좋아요를 취소했습니다.", HttpStatus.OK.value());
         return ResponseEntity.status(HttpStatus.OK).body(message);
@@ -176,7 +176,7 @@ public class PostService {
         );
     }
 
-    public void commentChange(PostDetailResponseDto postResponseDto, Long userId) {
+    private void commentChange(PostDetailResponseDto postResponseDto, Long userId) {
         for (Comment comment : postResponseDto.getCommentList()) {
             commentSetChange(comment, userId);
         }
