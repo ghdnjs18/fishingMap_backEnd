@@ -31,4 +31,8 @@ public class CommentLike {
         this.user = user;
         this.comment = comment;
     }
+
+    public void changeCheck() {
+        this.check = !this.check;
+    }
 }

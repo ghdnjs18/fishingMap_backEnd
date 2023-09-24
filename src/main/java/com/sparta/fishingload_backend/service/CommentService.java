@@ -61,7 +61,7 @@ public class CommentService {
 
         comment.setCommentUse(false);
 
-        MessageResponseDto message = new MessageResponseDto("게시물 삭제를 성공했습니다.", HttpStatus.OK.value());
+        MessageResponseDto message = new MessageResponseDto("댓글 삭제를 성공했습니다.", HttpStatus.OK.value());
         return ResponseEntity.status(HttpStatus.OK).body(message);
     }
 
@@ -78,15 +78,15 @@ public class CommentService {
 
         MessageResponseDto message;
         if (commentLike.isCheck()) {
-            commentLike.setCheck(false);
+            commentLike.changeCheck();
             comment.setCommentLike(comment.getCommentLike() + 1);
-            message = new MessageResponseDto("게시물 좋아요를 성공했습니다.", HttpStatus.OK.value());
+            message = new MessageResponseDto("댓글 좋아요를 성공했습니다.", HttpStatus.OK.value());
             return ResponseEntity.status(HttpStatus.OK).body(message);
         }
 
-        commentLike.setCheck(true);
+        commentLike.changeCheck();
         comment.setCommentLike(comment.getCommentLike() - 1);
-        message = new MessageResponseDto("게시물 좋아요를 취소했습니다.", HttpStatus.OK.value());
+        message = new MessageResponseDto("댓글 좋아요를 취소했습니다.", HttpStatus.OK.value());
         return ResponseEntity.status(HttpStatus.OK).body(message);
     }
 

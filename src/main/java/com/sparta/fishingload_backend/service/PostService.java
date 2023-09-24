@@ -177,24 +177,20 @@ public class PostService {
     }
 
     private void commentChange(PostDetailResponseDto postResponseDto, Long userId) {
+        postResponseDto.getCommentList().removeIf(comment -> !comment.isCommentUse());
         for (Comment comment : postResponseDto.getCommentList()) {
             commentSetChange(comment, userId);
         }
     }
 
     private void commentSetChange(Comment comment, Long userId) {
+        comment.getChildcommentList().removeIf(c -> !c.isCommentUse());
         CommentLike commentLike = commentLikeRepository.findByUser_IdAndComment_Id(userId, comment.getId());
         if (commentLike != null && !commentLike.isCheck()) {
             comment.setCommentLikeUse(true);
         }
-        if (!comment.isCommentUse()) {
-            comment.setAccountId("알수없음");
-            comment.setComment("삭제된 댓글입니다.");
-        }
-        if (comment.getChildcommentList() != null) {
-            for (Comment comment1 : comment.getChildcommentList()) {
-                commentSetChange(comment1, userId);
-            }
+        for (Comment childComment : comment.getChildcommentList()) {
+            commentSetChange(childComment, userId);
         }
     }
 
