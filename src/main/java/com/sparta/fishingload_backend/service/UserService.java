@@ -149,16 +149,18 @@ public class UserService {
         UserRoleEnum role = user.getRole();
 
         String accessToken = jwtUtil.createAccessToken(userId, role);
-        res.addHeader(JwtUtil.AUTHORIZATION_HEADER, accessToken);
+        String refresh = jwtUtil.createRefreshToken(userId, role);
 
         RefreshToken refreshToken = refreshTokenRepository.findByUserId(userId).orElse(null);
-        String refresh = jwtUtil.createRefreshToken(userId, role);
         if (refreshToken == null) {
             refreshToken = new RefreshToken(refresh, userId);
         } else {
             refreshToken.updateToken(refresh);
         }
+
         refreshTokenRepository.save(refreshToken);
+
+        res.addHeader(JwtUtil.AUTHORIZATION_HEADER, accessToken);
         res.addHeader(JwtUtil.REFRESH_HEADER, refreshToken.getToken());
 
         MessageResponseDto message = new MessageResponseDto("로그인 성공했습니다.", HttpStatus.OK.value());

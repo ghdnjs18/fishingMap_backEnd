@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.servers.Server;
 import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -40,15 +41,29 @@ public class SwaggerConfig {
 
     @Bean
     public OpenAPI springShopOpenAPI() {
+        // swagger 토큰 사용 설정
         List<SecurityRequirement> securityRequirementList = new ArrayList<>();
         securityRequirementList.add(new SecurityRequirement().addList(JwtUtil.AUTHORIZATION_HEADER));
         securityRequirementList.add(new SecurityRequirement().addList(JwtUtil.REFRESH_HEADER));
         securityRequirementList.add(new SecurityRequirement().addList("Temporary_Authorization"));
 
-        return new OpenAPI()
-                .info(new Info().title("FishingLoad API")
-                        .version("v0.0.1")
-                        .description("FishingLoad 프로젝트 API 명세서입니다."))
-                        .security(securityRequirementList);
+        // swagger 서버 설정
+        List<Server> serverList = new ArrayList<>();
+        Server local = new Server();
+        local.setUrl("http://localhost:8080");
+        local.setDescription("local");
+        Server deploy = new Server();
+        deploy.setUrl("https://fishing-load.store");
+        deploy.setDescription("deploy");
+        serverList.add(local);
+        serverList.add(deploy);
+
+        OpenAPI openAPI = new OpenAPI();
+        openAPI.info(new Info().title("FishingLoad API")
+                .version("v0.0.1")
+                .description("FishingLoad 프로젝트 API 명세서입니다."));
+        openAPI.security(securityRequirementList);
+        openAPI.setServers(serverList);
+        return openAPI;
     }
 }

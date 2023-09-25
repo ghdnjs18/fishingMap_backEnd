@@ -57,16 +57,18 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         UserRoleEnum role = ((UserDetailsImpl) authResult.getPrincipal()).getUser().getRole();
 
         String accessToken = jwtUtil.createAccessToken(userId, role);
-        response.addHeader(JwtUtil.AUTHORIZATION_HEADER, accessToken);
+        String refresh = jwtUtil.createRefreshToken(userId, role);
 
         RefreshToken refreshToken = refreshTokenRepository.findByUserId(userId).orElse(null);
-        String refresh = jwtUtil.createRefreshToken(userId, role);
         if (refreshToken == null) {
             refreshToken = new RefreshToken(refresh, userId);
         } else {
             refreshToken.updateToken(refresh);
         }
+
         refreshTokenRepository.save(refreshToken);
+
+        response.addHeader(JwtUtil.AUTHORIZATION_HEADER, accessToken);
         response.addHeader(JwtUtil.REFRESH_HEADER, refreshToken.getToken());
 
         response.setContentType("application/json; charset=UTF-8");

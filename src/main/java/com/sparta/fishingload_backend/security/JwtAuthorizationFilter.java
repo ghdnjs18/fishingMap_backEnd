@@ -31,14 +31,18 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
         String accessToken = jwtUtil.getJwtFromHeader(req, JwtUtil.AUTHORIZATION_HEADER);
         String refreshToken = jwtUtil.getJwtFromHeader(req, JwtUtil.REFRESH_HEADER);
 
-        if (req.getRequestURI().equals("/user/login") || req.getRequestURI().equals("/user/signup") || req.getRequestURI().equals("/")) {
-            logger.info("Pass Authorization");
+        if (req.getRequestURI().equals("/api/user/login") ||
+            req.getRequestURI().equals("/api/user/signup") ||
+            req.getRequestURI().equals("/") ||
+            req.getRequestURI().equals("/health") ||
+            req.getRequestURI().equals("/api/user/signin")) {
+            logger.info("Pass Authorization : " + req.getRequestURI());
             filterChain.doFilter(req, res);
+            return;
         }
 
         // 토큰이 null인지, 길이가 0인지, 공백이 포함 되어 있는지 확인 있으면 (false)
         if (StringUtils.hasText(accessToken)) {
-
             if (!jwtUtil.validateToken(accessToken)) {
 
                 String refresh = req.getHeader(JwtUtil.REFRESH_HEADER);
@@ -67,7 +71,6 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
                 throw new RuntimeException(e.getMessage());
             }
         }
-
         filterChain.doFilter(req, res);
     }
 
