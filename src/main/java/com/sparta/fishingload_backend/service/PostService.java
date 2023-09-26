@@ -1,10 +1,14 @@
 package com.sparta.fishingload_backend.service;
 
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.sparta.fishingload_backend.dto.*;
 import com.sparta.fishingload_backend.entity.*;
 import com.sparta.fishingload_backend.repository.*;
 import com.sparta.fishingload_backend.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -14,9 +18,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -27,9 +35,14 @@ public class PostService {
     private final CategoryRepository categoryRepository;
     private final PostLikeRepository postLikeRepository;
     private final CommentLikeRepository commentLikeRepository;
+    private final AmazonS3Client amazonS3Client;
     private final JwtUtil jwtUtil;
+    private final PostImageRepository postImageRepository;
 
-    public PostResponseDto createPost(PostRequestDto requestDto, User user) {
+    @Value("${aws.s3.bucket}")
+    private String bucketName;
+
+    public PostResponseDto createPost(MultipartFile[] multipartFiles, PostRequestDto requestDto, User user) {
         Post post = new Post(requestDto);
         post.setAccountId(user.getUserId());
 
@@ -40,10 +53,18 @@ public class PostService {
 
         User userSelect = findUser(user.getUserId());
         userSelect.addPostList(post);
-        postRepository.save(post);
 
+        List<PostImage> postImage = upload(multipartFiles);
+
+        postRepository.save(post);
+        for (PostImage image : postImage) {
+            image.setPost(post);
+        }
         return new PostResponseDto(post);
     }
+
+
+
 
     @Transactional(readOnly = true)
     public PostListResponseDto getPosts() {
@@ -192,6 +213,47 @@ public class PostService {
         for (Comment childComment : comment.getChildcommentList()) {
             commentSetChange(childComment, userId);
         }
+    }
+
+    private List<PostImage> upload(MultipartFile[] multipartFiles) {
+
+        List<PostImage> postImages = new ArrayList<>();
+
+        String uploadFilePath = "postImage";
+
+        for (MultipartFile multipartFile :  multipartFiles) {
+            //파일 확장자 추출
+            String filetype = multipartFile.getOriginalFilename().
+                    substring(multipartFile.getOriginalFilename().indexOf(".")+1);
+            //랜덤 이름 부여
+            String uploadName = UUID.randomUUID()+"."+filetype;
+
+            ObjectMetadata objectMetadata = new ObjectMetadata();
+            objectMetadata.setContentLength(multipartFile.getSize());
+            objectMetadata.setContentType(multipartFile.getContentType());
+
+            try (InputStream inputStream = multipartFile.getInputStream()) {
+                String keyName = uploadFilePath + "/" + uploadName;
+
+                // S3에 폴더 및 파일 업로드
+                amazonS3Client.putObject(
+                        new PutObjectRequest(bucketName, keyName, inputStream, objectMetadata)
+                );
+
+                // S3에 업로드한 폴더 및 파일 URL
+               String uploadFileUrl = amazonS3Client.getUrl(bucketName, keyName).toString();
+
+               //이미지
+               PostImage postImage = new PostImage();
+               postImage.save(keyName,uploadFileUrl);
+
+               postImageRepository.save(postImage);
+               postImages.add(postImage);
+            } catch (IOException e) {
+                e.printStackTrace();
+        }
+        }
+        return postImages;
     }
 
 }
