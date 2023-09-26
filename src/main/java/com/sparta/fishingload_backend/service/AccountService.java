@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 
@@ -71,6 +72,20 @@ public class AccountService {
         if (updateRequestDto.getNickname() != null) {
             String nickname = updateRequestDto.getNickname();
             user.setNickname(nickname);
+        }
+
+        // 이메일 중복 확인
+        String email = updateRequestDto.getEmail();
+        Optional<User> checkEmail = userRepository.findByEmail(email);
+        if (checkEmail.isPresent()) {
+            throw new IllegalArgumentException("중복된 이메일이 존재합니다.");
+        }
+
+        // 닉네임 중복 확인
+        String nickname = updateRequestDto.getNickname();
+        Optional<User> checkNickname = userRepository.findByNickname(nickname);
+        if (checkNickname.isPresent()) {
+            throw new IllegalArgumentException("중복된 닉네임이 존재합니다.");
         }
 
         userRepository.save(user);
