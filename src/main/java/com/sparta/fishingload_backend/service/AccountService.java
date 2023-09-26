@@ -1,12 +1,18 @@
 package com.sparta.fishingload_backend.service;
 
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.sparta.fishingload_backend.dto.*;
 import com.sparta.fishingload_backend.entity.Comment;
 import com.sparta.fishingload_backend.entity.Post;
 import com.sparta.fishingload_backend.entity.User;
+import com.sparta.fishingload_backend.entity.UserImage;
 import com.sparta.fishingload_backend.repository.PostRepository;
+import com.sparta.fishingload_backend.repository.UserImageRepository;
 import com.sparta.fishingload_backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -16,6 +22,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 
 @Service
@@ -25,6 +38,14 @@ public class AccountService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final PostRepository postRepository;
+    private final UserImageRepository userImageRepository;
+    private final AmazonS3Client amazonS3Client;
+
+    @Value("${aws.s3.bucket}")
+    private String bucketName;
+
+    @Value("${aws.cloudfront}")
+    private String cloudFront;
 
     //개인 정보
     public AccountResponseDto MyInfo(User user) {
@@ -98,5 +119,60 @@ public class AccountService {
 
         MessageResponseDto message = new MessageResponseDto("회원탈퇴가 성공했습니다.", HttpStatus.OK.value());
         return ResponseEntity.status(HttpStatus.OK).body(message);
+    }
+
+    @Transactional
+    public ResponseEntity<MessageResponseDto> userImageUpload(List<MultipartFile> multipartFiles, User user) {
+        User selectUser = findUser(user.getUserId());
+
+        String uploadFilePath = "userProfil";
+
+        for (MultipartFile multipartFile : multipartFiles) {
+            String originalFileName = multipartFile.getOriginalFilename();
+            String uploadFileName = getUuidFileName(originalFileName);
+
+
+            ObjectMetadata objectMetadata = new ObjectMetadata();
+            objectMetadata.setContentLength(multipartFile.getSize());
+            objectMetadata.setContentType(multipartFile.getContentType());
+
+            try (InputStream inputStream = multipartFile.getInputStream()) {
+                String keyName = uploadFilePath + "/" + uploadFileName; // userProfil/파일.확장자
+
+                // S3에 폴더 및 파일 업로드
+                amazonS3Client.putObject(
+                        new PutObjectRequest(bucketName, keyName, inputStream, objectMetadata)
+                );
+
+                // S3에 업로드한 폴더 및 파일 URL
+                String uploadFileUrl = cloudFront + keyName;
+
+                UserImage userImage = userImageRepository.findByUser(selectUser);
+                if (userImage == null) {
+                    userImageRepository.save(new UserImage(keyName, uploadFileUrl, selectUser));
+                } else {
+                    amazonS3Client.deleteObject(bucketName, userImage.getImagePath());
+                    userImage.update(keyName, uploadFileUrl);
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+        }
+
+        MessageResponseDto message = new MessageResponseDto("프로필 업로드 성공", HttpStatus.OK.value());
+        return ResponseEntity.status(HttpStatus.OK).body(message);
+    }
+
+    // UUID 파일명 반환
+    private String getUuidFileName(String fileName) {
+        String ext = fileName.substring(fileName.indexOf(".") + 1);
+        return UUID.randomUUID().toString() + "." + ext;
+    }
+
+    private User findUser(String userId) {
+        return userRepository.findByUserIdAndAccountUseTrue(userId).orElseThrow(() ->
+                new NullPointerException("해당 유저는 존재하지 않습니다.")
+        );
     }
 }

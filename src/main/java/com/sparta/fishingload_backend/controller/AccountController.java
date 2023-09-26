@@ -5,9 +5,13 @@ import com.sparta.fishingload_backend.security.UserDetailsImpl;
 import com.sparta.fishingload_backend.service.AccountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api")
@@ -51,5 +55,11 @@ public class AccountController {
     @DeleteMapping("/account/resign")
     public ResponseEntity<MessageResponseDto> resign(@AuthenticationPrincipal UserDetailsImpl userDetails) {
         return accountService.resign(userDetails.getUser());
+    }
+
+    // 회원 프로필 변경
+    @PostMapping("/account/image")
+    public ResponseEntity<MessageResponseDto> userImageUpload(@RequestPart("image") List<MultipartFile> multipartFiles, @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        return accountService.userImageUpload(multipartFiles, userDetails.getUser());
     }
 }
