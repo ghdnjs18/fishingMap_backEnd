@@ -1,9 +1,6 @@
 package com.sparta.fishingload_backend.dto;
 
-import com.sparta.fishingload_backend.entity.Category;
-import com.sparta.fishingload_backend.entity.Comment;
-import com.sparta.fishingload_backend.entity.Post;
-import com.sparta.fishingload_backend.entity.PostLike;
+import com.sparta.fishingload_backend.entity.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -24,6 +21,7 @@ public class PostResponseDto {
     private String locationdate;
     private List<Double> coordinates;
     private Category category;
+    private List<PostImage> postImages;
 
     public PostResponseDto(Post post) {
         this.id = post.getId();
@@ -37,5 +35,6 @@ public class PostResponseDto {
         this.locationdate = post.getLocationdate();
         this.category = post.getCategory();
         this.coordinates = post.getCoordinates();
+//        this.postImages =
     }
 }

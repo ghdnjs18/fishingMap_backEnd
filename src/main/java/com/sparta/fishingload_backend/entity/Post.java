@@ -60,6 +60,10 @@ public class Post extends Timestamped{
     @OrderBy("createdTime desc")
     private List<Comment> commentList = new ArrayList<>();
 
+    @OneToMany(mappedBy = "post")
+    @JoinColumn(name = "post_image")
+    private List<PostImage> postImages = new ArrayList<>();
+
     public Post(PostRequestDto requestDto) {
         this.title = requestDto.getTitle();
         this.contents = requestDto.getContents();

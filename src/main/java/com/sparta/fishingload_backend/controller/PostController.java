@@ -9,6 +9,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api")
@@ -18,8 +19,8 @@ public class PostController {
     private final PostService postService;
 
     @PostMapping("/post")
-    public PostResponseDto createPost(@RequestBody PostRequestDto requestDto, @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        return postService.createPost(requestDto, userDetails.getUser());
+    public PostResponseDto createPost(@RequestPart ("images") MultipartFile[]  multipartFiles, @RequestBody PostRequestDto requestDto, @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        return postService.createPost(multipartFiles ,requestDto, userDetails.getUser());
     }
 
     @GetMapping("/post")
@@ -47,8 +48,9 @@ public class PostController {
     }
 
     @PutMapping("/post/{id}")
-    public PostResponseDto updatePost(@PathVariable Long id, @RequestBody PostRequestDto requestDto, @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        return postService.updatePost(id, requestDto, userDetails.getUser());
+    public PostResponseDto updatePost(@PathVariable Long id,@RequestPart ("images") MultipartFile[]  multipartFiles ,
+                                      @RequestBody PostRequestDto requestDto, @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        return postService.updatePost(id, requestDto, multipartFiles,userDetails.getUser());
     }
 
     @DeleteMapping("/post/{id}")
