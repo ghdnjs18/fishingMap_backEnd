@@ -16,6 +16,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -127,9 +129,10 @@ public class PostService {
     }
 
     @Transactional
-    public PostResponseDto updatePost(Long id, PostRequestDto requestDto, User user) {
+    public PostResponseDto updatePost(Long id, PostRequestDto requestDto, MultipartFile[] multipartFiles, User user) {
         Post post = findPost(id);
-
+        List<PostImage> postImages = updateImage(multipartFiles , post);
+        if(!postImages.isEmpty()) post.setPostImages(postImages);
         if (!user.getUserId().equals(post.getAccountId()) && user.getRole() != UserRoleEnum.ADMIN) {
             throw new IllegalArgumentException("해당 게시물의 작성자만 수정할 수 있습니다.");
         }
@@ -255,5 +258,22 @@ public class PostService {
         }
         return postImages;
     }
+
+    private List<PostImage> updateImage(MultipartFile[] multipartFiles, Post post) {
+        if(!(multipartFiles.length == 0)) {
+            return null;
+        }
+
+        List<PostImage> postImages = postImageRepository.findByPostId(post.getId());
+        for (PostImage postImage : postImages) {
+            amazonS3Client.deleteObject(bucketName, postImage.getImagePath());
+        }
+
+        List<PostImage> postImageList = upload(multipartFiles);
+
+        return postImageList;
+
+    }
+
 
 }

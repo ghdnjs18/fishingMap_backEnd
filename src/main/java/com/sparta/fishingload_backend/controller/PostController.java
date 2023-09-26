@@ -48,8 +48,9 @@ public class PostController {
     }
 
     @PutMapping("/post/{id}")
-    public PostResponseDto updatePost(@PathVariable Long id, @RequestBody PostRequestDto requestDto, @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        return postService.updatePost(id, requestDto, userDetails.getUser());
+    public PostResponseDto updatePost(@PathVariable Long id,@RequestPart ("images") MultipartFile[]  multipartFiles ,
+                                      @RequestBody PostRequestDto requestDto, @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        return postService.updatePost(id, requestDto, multipartFiles,userDetails.getUser());
     }
 
     @DeleteMapping("/post/{id}")
