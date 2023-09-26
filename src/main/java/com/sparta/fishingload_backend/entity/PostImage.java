@@ -25,9 +25,9 @@ public class PostImage {
     @JoinColumn(name = "post_id")
     private Post post;
 
-
-    public void save(String keyName, String uploadFileUrl) {
+    public PostImage(String keyName, String uploadFileUrl, Post post) {
         this.imagePath = keyName;
         this.imageUrl = uploadFileUrl;
+        this.post = post;
     }
 }

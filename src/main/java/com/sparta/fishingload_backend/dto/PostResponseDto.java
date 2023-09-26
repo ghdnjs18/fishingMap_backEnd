@@ -21,7 +21,6 @@ public class PostResponseDto {
     private String locationdate;
     private List<Double> coordinates;
     private Category category;
-    private List<PostImage> postImages;
 
     public PostResponseDto(Post post) {
         this.id = post.getId();
@@ -35,6 +34,5 @@ public class PostResponseDto {
         this.locationdate = post.getLocationdate();
         this.category = post.getCategory();
         this.coordinates = post.getCoordinates();
-//        this.postImages =
     }
 }

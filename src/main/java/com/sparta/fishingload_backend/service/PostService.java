@@ -8,6 +8,7 @@ import com.sparta.fishingload_backend.entity.*;
 import com.sparta.fishingload_backend.repository.*;
 import com.sparta.fishingload_backend.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -30,6 +31,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Log4j2
 public class PostService {
 
     private final PostRepository postRepository;
@@ -44,7 +46,10 @@ public class PostService {
     @Value("${aws.s3.bucket}")
     private String bucketName;
 
-    public PostResponseDto createPost(MultipartFile[] multipartFiles, PostRequestDto requestDto, User user) {
+    @Value("${aws.cloudfront}")
+    private String cloudFront;
+
+    public PostResponseDto createPost(List<MultipartFile> multipartFiles, PostRequestDto requestDto, User user) {
         Post post = new Post(requestDto);
         post.setAccountId(user.getUserId());
 
@@ -56,17 +61,13 @@ public class PostService {
         User userSelect = findUser(user.getUserId());
         userSelect.addPostList(post);
 
-        List<PostImage> postImage = upload(multipartFiles);
-
+        log.info("이미지 업로드 시도");
+        upload(multipartFiles, post);
+        log.info("게시글 저장 시도");
         postRepository.save(post);
-        for (PostImage image : postImage) {
-            image.setPost(post);
-        }
+        log.info("게시글 저장 완료");
         return new PostResponseDto(post);
     }
-
-
-
 
     @Transactional(readOnly = true)
     public PostListResponseDto getPosts() {
@@ -129,10 +130,10 @@ public class PostService {
     }
 
     @Transactional
-    public PostResponseDto updatePost(Long id, PostRequestDto requestDto, MultipartFile[] multipartFiles, User user) {
+    public PostResponseDto updatePost(Long id, PostRequestDto requestDto, List<MultipartFile> multipartFiles, User user) {
         Post post = findPost(id);
-        List<PostImage> postImages = updateImage(multipartFiles , post);
-        if(!postImages.isEmpty()) post.setPostImages(postImages);
+//        List<PostImage> postImages = updateImage(multipartFiles , post);
+//        if(!postImages.isEmpty()) post.setPostImages(postImages);
         if (!user.getUserId().equals(post.getAccountId()) && user.getRole() != UserRoleEnum.ADMIN) {
             throw new IllegalArgumentException("해당 게시물의 작성자만 수정할 수 있습니다.");
         }
@@ -182,6 +183,59 @@ public class PostService {
         return ResponseEntity.status(HttpStatus.OK).body(message);
     }
 
+    @Transactional
+    public void upload(List<MultipartFile> multipartFiles, Post post) {
+        log.info("이미지 업로드");
+        String uploadFilePath = "postImage";
+
+        for (MultipartFile multipartFile :  multipartFiles) {
+            //파일 확장자 추출
+            String filetype = multipartFile.getOriginalFilename().
+                    substring(multipartFile.getOriginalFilename().indexOf(".")+1);
+            //랜덤 이름 부여
+            String uploadName = UUID.randomUUID()+"."+filetype;
+
+            ObjectMetadata objectMetadata = new ObjectMetadata();
+            objectMetadata.setContentLength(multipartFile.getSize());
+            objectMetadata.setContentType(multipartFile.getContentType());
+
+            try (InputStream inputStream = multipartFile.getInputStream()) {
+                String keyName = uploadFilePath + "/" + uploadName;
+
+                // S3에 폴더 및 파일 업로드
+                amazonS3Client.putObject(
+                        new PutObjectRequest(bucketName, keyName, inputStream, objectMetadata)
+                );
+
+                // S3에 업로드한 폴더 및 파일 URL
+                String uploadFileUrl = cloudFront + keyName;
+                log.info("포스트 이미지 생성 전");
+                //이미지
+                PostImage postImage = new PostImage(keyName, uploadFileUrl, post);
+                log.info("게시글에 이미지 리스트 넣기");
+                post.addPostImageList(postImage);
+                log.info("포스트 이미지 저장 전");
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    private List<PostImage> updateImage(List<MultipartFile> multipartFiles, Post post) {
+        if(multipartFiles.isEmpty()) {
+            return null;
+        }
+
+        List<PostImage> postImages = postImageRepository.findByPostId(post.getId());
+        for (PostImage postImage : postImages) {
+            amazonS3Client.deleteObject(bucketName, postImage.getImagePath());
+        }
+
+//        List<PostImage> postImageList = upload(multipartFiles, post);
+
+        return null;
+    }
+
     private Post findPost(Long id) {
         return postRepository.findByIdAndPostUseTrue(id).orElseThrow(() ->
                 new NullPointerException("선택한 게시물은 존재하지 않습니다.")
@@ -217,63 +271,4 @@ public class PostService {
             commentSetChange(childComment, userId);
         }
     }
-
-    private List<PostImage> upload(MultipartFile[] multipartFiles) {
-
-        List<PostImage> postImages = new ArrayList<>();
-
-        String uploadFilePath = "postImage";
-
-        for (MultipartFile multipartFile :  multipartFiles) {
-            //파일 확장자 추출
-            String filetype = multipartFile.getOriginalFilename().
-                    substring(multipartFile.getOriginalFilename().indexOf(".")+1);
-            //랜덤 이름 부여
-            String uploadName = UUID.randomUUID()+"."+filetype;
-
-            ObjectMetadata objectMetadata = new ObjectMetadata();
-            objectMetadata.setContentLength(multipartFile.getSize());
-            objectMetadata.setContentType(multipartFile.getContentType());
-
-            try (InputStream inputStream = multipartFile.getInputStream()) {
-                String keyName = uploadFilePath + "/" + uploadName;
-
-                // S3에 폴더 및 파일 업로드
-                amazonS3Client.putObject(
-                        new PutObjectRequest(bucketName, keyName, inputStream, objectMetadata)
-                );
-
-                // S3에 업로드한 폴더 및 파일 URL
-               String uploadFileUrl = amazonS3Client.getUrl(bucketName, keyName).toString();
-
-               //이미지
-               PostImage postImage = new PostImage();
-               postImage.save(keyName,uploadFileUrl);
-
-               postImageRepository.save(postImage);
-               postImages.add(postImage);
-            } catch (IOException e) {
-                e.printStackTrace();
-        }
-        }
-        return postImages;
-    }
-
-    private List<PostImage> updateImage(MultipartFile[] multipartFiles, Post post) {
-        if(!(multipartFiles.length == 0)) {
-            return null;
-        }
-
-        List<PostImage> postImages = postImageRepository.findByPostId(post.getId());
-        for (PostImage postImage : postImages) {
-            amazonS3Client.deleteObject(bucketName, postImage.getImagePath());
-        }
-
-        List<PostImage> postImageList = upload(multipartFiles);
-
-        return postImageList;
-
-    }
-
-
 }

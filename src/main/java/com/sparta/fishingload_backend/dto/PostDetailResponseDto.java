@@ -3,6 +3,7 @@ package com.sparta.fishingload_backend.dto;
 import com.sparta.fishingload_backend.entity.Category;
 import com.sparta.fishingload_backend.entity.Comment;
 import com.sparta.fishingload_backend.entity.Post;
+import com.sparta.fishingload_backend.entity.PostImage;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -27,6 +28,7 @@ public class PostDetailResponseDto {
     private Category category;
     private List<Comment> commentList;
     private boolean postLikeUse = false;
+    private List<PostImage> postImageList;
 
     public PostDetailResponseDto(Post post) {
         this.id = post.getId();
@@ -41,5 +43,6 @@ public class PostDetailResponseDto {
         this.category = post.getCategory();
         this.commentList = post.getCommentList();
         this.coordinates = post.getCoordinates();
+        this.postImageList = post.getPostImages();
     }
 }

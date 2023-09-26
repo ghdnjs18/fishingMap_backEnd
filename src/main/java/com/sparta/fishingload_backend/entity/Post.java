@@ -61,7 +61,6 @@ public class Post extends Timestamped{
     private List<Comment> commentList = new ArrayList<>();
 
     @OneToMany(mappedBy = "post")
-    @JoinColumn(name = "post_image")
     private List<PostImage> postImages = new ArrayList<>();
 
     public Post(PostRequestDto requestDto) {
@@ -87,5 +86,9 @@ public class Post extends Timestamped{
 
     public void addCommentList(Comment comment) {
         this.commentList.add(comment);
+    }
+
+    public void addPostImageList(PostImage postImage) {
+        this.postImages.add(postImage);
     }
 }
