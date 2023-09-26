@@ -16,6 +16,5 @@ public class AccountResponseDto {
         this.userId = user.getUserId();
         this.nickname = user.getNickname();
         this.email = user.getEmail();
-        this.profil = user.getUserImage().getImageUrl();
     }
 }

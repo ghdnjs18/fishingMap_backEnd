@@ -52,6 +52,8 @@ public class AccountService {
         User userSelect = userRepository.findById(user.getId()).orElseThrow(() ->
                 new NullPointerException("유저 정보가 없습니다."));
         AccountResponseDto accountResponseDto = new AccountResponseDto(userSelect);
+        UserImage userImage = userImageRepository.findByUser(userSelect);
+        if (userImage != null) accountResponseDto.setProfil(userImage.getImageUrl());
         return accountResponseDto;
     }
 

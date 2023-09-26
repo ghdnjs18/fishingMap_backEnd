@@ -1,5 +1,6 @@
 package com.sparta.fishingload_backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,6 +22,10 @@ public class PostImage {
     @Column(name = "image_url", nullable = false)
     private String imageUrl;
 
+    @Column(name = "image_use", nullable = false)
+    private boolean imageUse = true;
+
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id")
     private Post post;

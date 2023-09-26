@@ -17,7 +17,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -26,7 +25,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -61,11 +59,10 @@ public class PostService {
         User userSelect = findUser(user.getUserId());
         userSelect.addPostList(post);
 
-        log.info("이미지 업로드 시도");
-        upload(multipartFiles, post);
-        log.info("게시글 저장 시도");
         postRepository.save(post);
-        log.info("게시글 저장 완료");
+
+        upload(multipartFiles, post);
+
         return new PostResponseDto(post);
     }
 
@@ -125,6 +122,7 @@ public class PostService {
             return responseDto;
         }
 
+        imageChange(responseDto);
         commentChange(responseDto, 0L);
         return responseDto;
     }
@@ -132,8 +130,7 @@ public class PostService {
     @Transactional
     public PostResponseDto updatePost(Long id, PostRequestDto requestDto, List<MultipartFile> multipartFiles, User user) {
         Post post = findPost(id);
-//        List<PostImage> postImages = updateImage(multipartFiles , post);
-//        if(!postImages.isEmpty()) post.setPostImages(postImages);
+        updateImage(multipartFiles, post);
         if (!user.getUserId().equals(post.getAccountId()) && user.getRole() != UserRoleEnum.ADMIN) {
             throw new IllegalArgumentException("해당 게시물의 작성자만 수정할 수 있습니다.");
         }
@@ -183,9 +180,7 @@ public class PostService {
         return ResponseEntity.status(HttpStatus.OK).body(message);
     }
 
-    @Transactional
     public void upload(List<MultipartFile> multipartFiles, Post post) {
-        log.info("이미지 업로드");
         String uploadFilePath = "postImage";
 
         for (MultipartFile multipartFile :  multipartFiles) {
@@ -209,31 +204,27 @@ public class PostService {
 
                 // S3에 업로드한 폴더 및 파일 URL
                 String uploadFileUrl = cloudFront + keyName;
-                log.info("포스트 이미지 생성 전");
-                //이미지
+
                 PostImage postImage = new PostImage(keyName, uploadFileUrl, post);
-                log.info("게시글에 이미지 리스트 넣기");
-                post.addPostImageList(postImage);
-                log.info("포스트 이미지 저장 전");
+                postImageRepository.save(postImage);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         }
     }
 
-    private List<PostImage> updateImage(List<MultipartFile> multipartFiles, Post post) {
-        if(multipartFiles.isEmpty()) {
-            return null;
+    public void updateImage(List<MultipartFile> multipartFiles, Post post) {
+        Post selectPost = findPost(post.getId());
+        if(multipartFiles.get(0).getSize() == 0) {
+            return;
         }
 
-        List<PostImage> postImages = postImageRepository.findByPostId(post.getId());
+        List<PostImage> postImages = postImageRepository.findByPostIdAndImageUseTrue(selectPost.getId());
         for (PostImage postImage : postImages) {
             amazonS3Client.deleteObject(bucketName, postImage.getImagePath());
+            postImage.setImageUse(false);
         }
-
-//        List<PostImage> postImageList = upload(multipartFiles, post);
-
-        return null;
+        upload(multipartFiles, selectPost);
     }
 
     private Post findPost(Long id) {
@@ -270,5 +261,9 @@ public class PostService {
         for (Comment childComment : comment.getChildcommentList()) {
             commentSetChange(childComment, userId);
         }
+    }
+
+    private void imageChange(PostDetailResponseDto postResponseDto) {
+        postResponseDto.getPostImageList().removeIf(image -> !image.isImageUse());
     }
 }
