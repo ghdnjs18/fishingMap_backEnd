@@ -47,6 +47,9 @@ public class User {
     @JoinColumn(name = "user_id")
     private List<Comment> commentList = new ArrayList<>();
 
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
+    private UserImage userImage;
+
     public User(String userId, String password, UserRoleEnum role, SignupRequestDto requestDto) {
         this.userId = userId;
         this.password = password;

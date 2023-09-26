@@ -22,6 +22,12 @@ repositories {
 }
 
 dependencies {
+	// AWS
+//	implementation 'org.springframework.cloud:spring-cloud-starter-aws:3.0.1'
+//	implementation 'org.springframework.cloud:spring-cloud-aws:3.0.1'
+//	implementation 'org.springframework.cloud:spring-cloud-aws-s3:3.0.1'
+	implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
+
 	// Swagger
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
 

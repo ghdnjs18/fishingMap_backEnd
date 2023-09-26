@@ -1,6 +1,5 @@
 package com.sparta.fishingload_backend.repository;
 
-import com.sparta.fishingload_backend.entity.Category;
 import com.sparta.fishingload_backend.entity.Post;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
