@@ -32,11 +32,15 @@ jobs:
         echo $DB_URL >> src/main/resources/application-secret.properties
         echo $DB_USERNAME >> src/main/resources/application-secret.properties
         echo $DB_PASSWORD >> src/main/resources/application-secret.properties
+        echo aws.s3.access-key=$ACCESS_KEY >> src/main/resources/application-secret.properties
+        echo aws.s3.secret-key=$SECRET_KEY >> src/main/resources/application-secret.properties
       env:
         JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
         DB_URL: ${{ secrets.DB_URL }}
         DB_USERNAME: ${{ secrets.DB_USERNAME }}
         DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        SECRET_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       # gradle build
     - name: Build with Gradle
       uses: gradle/gradle-build-action@bd5760595778326ba7f1441bcf7e88b49de61a25 # v2.6.0
