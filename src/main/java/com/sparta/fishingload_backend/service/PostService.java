@@ -128,9 +128,9 @@ public class PostService {
     }
 
     @Transactional
-    public PostResponseDto updatePost(Long id, PostRequestDto requestDto, List<MultipartFile> multipartFiles, User user) {
+    public PostResponseDto updatePost(Long id, PostRequestDto requestDto, User user) {
         Post post = findPost(id);
-        updateImage(multipartFiles, post);
+//        updateImage(multipartFiles, post);
         if (!user.getUserId().equals(post.getAccountId()) && user.getRole() != UserRoleEnum.ADMIN) {
             throw new IllegalArgumentException("해당 게시물의 작성자만 수정할 수 있습니다.");
         }
