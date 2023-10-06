@@ -79,9 +79,9 @@ jobs:
         username: ubuntu
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
-          sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/test 
+          sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/test:latest
           sudo docker stop $(docker ps -a -q)
-          sudo docker run -dit -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/test 
+          sudo docker run -dit -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/test:latest 
           sudo docker rm $(docker ps --filter 'status=exited' -a -q)
           sudo docker image prune -a -f
 
