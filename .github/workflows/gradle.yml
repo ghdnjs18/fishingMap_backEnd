@@ -80,9 +80,9 @@ jobs:
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
           sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/test:latest
-          sudo docker stop $(docker ps -a -q)
+          sudo docker stop $(sudo docker ps -a -q)
           sudo docker run -dit -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/test:latest 
-          sudo docker rm $(docker ps --filter 'status=exited' -a -q)
+          sudo docker rm $(sudo docker ps --filter 'status=exited' -a -q)
           sudo docker image prune -a -f
 
       # git action - AWS CodeDeploy CI/CD
