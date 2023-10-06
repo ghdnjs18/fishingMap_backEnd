@@ -7,8 +7,8 @@ on:
   pull_request:
     branches: [ "main" ]
 
-env:
-  S3_BUCKET_NAME: elasticbeanstalk-ap-northeast-2-526437230846
+#env:
+#  S3_BUCKET_NAME: elasticbeanstalk-ap-northeast-2-526437230846
 
 jobs:
   build:
@@ -60,6 +60,30 @@ jobs:
       # Docker Hub push
     - name: docker Hub push
       run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/test
+
+  deploy:
+    # 실행환경
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    # 자바 버전 설정 스프링 3.0 이후부터 java17이 최소 요구사항
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+    - name: deploy
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ubuntu
+        key: ${{ secrets.EC2_SSH_KEY }}
+        script: |
+          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/test 
+          docker stop $(docker ps -a -q)
+          docker run -dit --log-driver=syslog -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/test 
+          docker rm $(docker ps --filter 'status=exited' -a -q)
+          docker image prune -a -f
 
       # git action - AWS CodeDeploy CI/CD
 #    # 디렉토리 생성
