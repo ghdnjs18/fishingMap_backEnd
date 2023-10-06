@@ -62,16 +62,15 @@ jobs:
       run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/test
 
   deploy:
-    # 실행환경
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    # 자바 버전 설정 스프링 3.0 이후부터 java17이 최소 요구사항
     - name: Set up JDK 17
       uses: actions/setup-java@v3
       with:
         java-version: '17'
         distribution: 'temurin'
+      # Docker Hub pull
     - name: deploy
       uses: appleboy/ssh-action@master
       with:
@@ -79,11 +78,11 @@ jobs:
         username: ubuntu
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
-          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/test 
-          docker stop $(docker ps -a -q)
-          docker run -dit --log-driver=syslog -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/test 
-          docker rm $(docker ps --filter 'status=exited' -a -q)
-          docker image prune -a -f
+          sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/test 
+          sudo docker stop $(docker ps -a -q)
+          sudo docker run -dit --log-driver=syslog -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/test 
+          sudo docker rm $(docker ps --filter 'status=exited' -a -q)
+          sudo docker image prune -a -f
 
       # git action - AWS CodeDeploy CI/CD
 #    # 디렉토리 생성
